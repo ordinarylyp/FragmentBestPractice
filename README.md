@@ -117,9 +117,113 @@ public class RightFragment extends Fragment {
 ### 一个简易的新闻应用（平板和手机共通）
 要制作一个新闻应用，是需要使用到滚动控件的，滚动控件如何使用，可以看项目[RecyclerViewTest](https://github.com/ordinarylyp/the_third_chapter)
 
-制作一个新闻应用，首先定义一个类[News](/app/src/main/java/lyp/com/fragmentbestpractice/News.java)
+制作一个新闻应用，首先定义一个类[News](/app/src/main/java/lyp/com/fragmentbestpractice/News.java),然后新建一个布局[news_content_frag]()，用于作为新闻内容的布局。这个布局很简单，主要分为两个部分，头部显示新闻的标题，正文部分显示新闻的内容，中间用一条细线隔开。同时，在布局的最左边也加上一条细线（在平板使用时将右边显示的新闻标题隔开）。
 
-  
-  
-  
-  
+再新建一个类[NewsContentFragment](/app/src/main/java/lyp/com/fragmentbestpractice/NewsContentFragment.java),这里加载了我们刚刚新建的news_content_frag布局。同时提提供了一个refresh()方法，用于将新闻的标题和内容显示在界面上。
+
+但这样是不够的，这都是在双页模式下使用的，想要兼容手机，在单页模式下使用，我们还要新建一个活动[NewsContentActivity](/app/src/main/java/lyp/com/fragmentbestpractice/NewsContentActivity.java),还有这个活动的布局[news_content.xml](/app/src/main/res/layout/news_content.xml);在onCreate方法中先通过intent获取传入的新闻标题和内容，再通过FragmentManager的findFragmentById找到NewsConcentFragment的实例，调用refresh()方法将新闻标题和内容传入，就可以将数据显示出来了。
+
+接下来还需再创建显示新闻列表的布局 [news_title_frag.xml](/app/src/main/res/layout/news_title_frag.xml)，这是用于显示新闻的标题的，这里就只有一个RecyclerView控件，所以还要新建一个[news_item.xml](/app/src/main/res/layout/new_item.xml)布局作为RecyclerView的子项。
+
+新闻标题的列表和子项的布局建立好之后，我们需要一个用于展示的地方，新建一个类[NewsTitleFragment](/app/src/main/java/lyp/com/fragmentbestpractice/NewsTitleFragment.java)作为展示列表的碎片，修改主布局[activity_main.xml]()，在单页模式下只会加载一个新闻标题碎片；在res目录下新建layout-sw600dp文件夹，在这个文件夹下新建一个[activity_main.xml]()，表示在双页模式下回加载两个碎片，并把新闻内容的碎片放在了FrameLayout布局下，这个布局的id是news_content_layout。因此能知道这个布局就是双页模式，不能找到就是单页模式。
+```Java
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if(getActivity().findViewById(R.id.news_content_layout)!=null){
+            isTwoPane=true;   //可以找到news_content_layout布局时，为双页模式。
+        }else {
+            isTwoPane=false;
+        }
+    }
+
+````
+
+接下来，就是要通过RecyclerView将新闻标题列表展示出来，所以我们需要一个适配器（adapter），我们在NewsContentActivity](/app/src/main/java/lyp/com/fragmentbestpractice/NewsContentActivity.java)中建一个内部类NewsAdapter：
+```Java
+    class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder>{
+        private List<News> mNewsList;
+
+        class ViewHolder extends RecyclerView.ViewHolder{
+            TextView newsTitleText;
+
+            public ViewHolder(View view){
+                super(view);
+                newsTitleText=view.findViewById(R.id.news_title);
+            }
+        }
+        public  NewsAdapter(List<News> newsList){
+            mNewsList=newsList;
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view =LayoutInflater.from(parent.getContext()).inflate(R.layout.new_item,parent,false);
+            final ViewHolder holder=new ViewHolder(view);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    News news=mNewsList.get(holder.getAdapterPosition());
+                    if(isTwoPane){
+                        NewsContentFragment newsContentFragment=(NewsContentFragment) getFragmentManager()
+                                .findFragmentById(R.id.news_content_fragment);
+                        newsContentFragment.refresh(news.getTitle(),news.getContent());
+                    }else {
+                        NewsContentActivity.actionStart(getActivity(),news.getTitle(),news.getContent());
+                    }
+                }
+            });
+            return holder;
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            News news=mNewsList.get(position);
+            holder.newsTitleText.setText(news.getTitle());
+        }
+
+        @Override
+        public int getItemCount() {
+            return mNewsList.size();
+        }
+    }
+```
+如果是双页模式，就刷新NewsContentFragment中的内容；如果是单页模式，就启动NewsContentActivity。
+
+最后向RecyclerView中填充数据（同样在NewsTitleFragment中进行）
+```Java
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view=inflater.inflate(R.layout.news_title_frag,container,false);
+        RecyclerView newsTitleRecyclerView = view.findViewById(R.id.news_title_recycler_view);
+        LinearLayoutManager layoutManager=new LinearLayoutManager(getActivity());
+        newsTitleRecyclerView.setLayoutManager(layoutManager);
+        NewsAdapter adapter = new NewsAdapter(getNews());
+        newsTitleRecyclerView.setAdapter(adapter);
+        return view;
+    }
+    
+    private List<News> getNews(){
+        List<News> newsList =new ArrayList<>();
+        for (int i=1;i<=50;i++){
+            News news =new News();
+            news.setTitle("新闻标题 "+i);
+            news.setContent(getRandomLengthContent("这是新闻内容哈"+i+"!"));
+            newsList.add(news);
+        }
+        return newsList;
+    }
+
+    private String getRandomLengthContent(String content){
+        Random random=new Random();
+        int length = random.nextInt(20)+1;
+        StringBuilder builder = new StringBuilder();
+        for(int i=0;i<length;i++){
+            builder.append(content);
+        }
+        return builder.toString();
+    }
+
+```
+  
