@@ -115,7 +115,9 @@ public class RightFragment extends Fragment {
 
 ![fragment_lifecycle.png ](/img/fragment_lifecycle.png "fragment_lifecycle")
 ### 一个简易的新闻应用（平板和手机共通）
-要制作一个新闻应用，是需要使用到滚动控件的，滚动控件如何使用，可以看项目[RecyclerViewTest](the_third_chapter/RecyclerViewTest/)
+要制作一个新闻应用，是需要使用到滚动控件的，滚动控件如何使用，可以看项目[RecyclerViewTest](https://github.com/ordinarylyp/the_third_chapter)
+
+制作一个新闻应用，首先定义一个类[News](/app/src/main/java/lyp/com/fragmentbestpractice/News.java)
 
   
   
