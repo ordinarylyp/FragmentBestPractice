@@ -139,7 +139,7 @@ public class RightFragment extends Fragment {
 
 ````
 
-接下来，就是要通过RecyclerView将新闻标题列表展示出来，所以我们需要一个适配器（adapter），我们在NewsContentActivity](/app/src/main/java/lyp/com/fragmentbestpractice/NewsContentActivity.java)中建一个内部类NewsAdapter：
+接下来，就是要通过RecyclerView将新闻标题列表展示出来，所以我们需要一个适配器（adapter），我们在[NewsContentActivity](/app/src/main/java/lyp/com/fragmentbestpractice/NewsContentActivity.java)中建一个内部类NewsAdapter：
 ```Java
     class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder>{
         private List<News> mNewsList;
