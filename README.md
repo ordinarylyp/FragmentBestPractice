@@ -226,4 +226,12 @@ public class RightFragment extends Fragment {
     }
 
 ```
-  
+最终运行的结果：
+单页模式下
+
+![single1.png](/img/single1.png "single1.png")
+![single2.png](/img/single2.png "single2.png")
+
+双页模式下
+
+![double.png](/img/double.png "double.png")
